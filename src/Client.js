@@ -440,13 +440,32 @@ class Client extends EventEmitter {
 
         await this.authStrategy.beforeBrowserInitialized();
 
-        const puppeteerOpts = this.options.puppeteer;
-        if (
-            puppeteerOpts &&
-            (puppeteerOpts.browserWSEndpoint || puppeteerOpts.browserURL)
-        ) {
+        const puppeteerOpts = this.options.puppeteer || {};
+        if (puppeteerOpts.browser) {
+            console.warn('[whatsapp-web.js] Using existing browser');
+
+            browser = puppeteerOpts.browser;
+
+            if (puppeteerOpts.existingPage) {
+                page = puppeteerOpts.existingPage;
+            } else {
+                page = await browser.newPage();
+            }
+
+            if (page.setViewport) {
+                await page.setViewport(null);
+            }
+        }
+        else if (puppeteerOpts.browserWSEndpoint || puppeteerOpts.browserURL) {
+            console.warn('[whatsapp-web.js] Using external browser');
+
             browser = await puppeteer.connect(puppeteerOpts);
-            page = await browser.newPage();
+
+            if (puppeteerOpts.existingPage) {
+                page = puppeteerOpts.existingPage;
+            } else {
+                page = await browser.newPage();
+            }
         } else {
             const browserArgs = [...(puppeteerOpts.args || [])];
             if (
@@ -483,11 +502,13 @@ class Client extends EventEmitter {
             await page.evaluateOnNewDocument(this.options.evalOnNewDoc);
         }
 
-        await page.goto(WhatsWebURL, {
-            waitUntil: 'load',
-            timeout: 0,
-            referer: 'https://whatsapp.com/',
-        });
+        if (!puppeteerOpts.existingPage) {
+            await page.goto(WhatsWebURL, {
+                waitUntil: 'load',
+                timeout: 0,
+                referer: 'https://whatsapp.com/',
+            });
+        }
 
         await this.inject();
 
