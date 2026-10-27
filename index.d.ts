@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { Readable } from 'stream';
 import { RequestInit } from 'node-fetch';
 import * as puppeteer from 'puppeteer';
 import InterfaceController from './src/util/InterfaceController';
@@ -198,7 +199,7 @@ declare namespace WAWebJS {
         ): Promise<string>;
 
         /** Cancels an active pairing code session and returns to QR code mode */
-        cancelPairingCode(): Promise<void>
+        cancelPairingCode(): Promise<void>;
 
         /** Force reset of connection state for the client */
         resetState(): Promise<void>;
@@ -209,6 +210,9 @@ declare namespace WAWebJS {
             content: MessageContent,
             options?: MessageSendOptions,
         ): Promise<Message>;
+
+        /** Send a reaction to a specific messageId */
+        sendReaction(messageId: string, reaction: string): Promise<void>;
 
         /** Sends a channel admin invitation to a user, allowing them to become an admin of the channel */
         sendChannelAdminInvite(
@@ -542,6 +546,15 @@ declare namespace WAWebJS {
             event: 'message_ciphertext',
             listener: (
                 /** The message that was ciphertext */
+                message: Message,
+            ) => void,
+        ): this;
+
+        /** Emitted when a ciphertext message failed to decrypt after recovery attempt */
+        on(
+            event: 'message_ciphertext_failed',
+            listener: (
+                /** The message that failed to decrypt */
                 message: Message,
             ) => void,
         ): this;
@@ -999,6 +1012,7 @@ declare namespace WAWebJS {
         CHAT_ARCHIVED = 'chat_archived',
         MESSAGE_RECEIVED = 'message',
         MESSAGE_CIPHERTEXT = 'message_ciphertext',
+        MESSAGE_CIPHERTEXT_FAILED = 'message_ciphertext_failed',
         MESSAGE_CREATE = 'message_create',
         MESSAGE_REVOKED_EVERYONE = 'message_revoke_everyone',
         MESSAGE_REVOKED_ME = 'message_revoke_me',
@@ -1292,7 +1306,11 @@ declare namespace WAWebJS {
         /** Deletes the message from the chat */
         delete: (everyone?: boolean, clearMedia?: boolean) => Promise<void>;
         /** Downloads and returns the attached message media */
-        downloadMedia: () => Promise<MessageMedia>;
+        downloadMedia: () => Promise<MessageMedia | undefined>;
+        /** Downloads the attached message media as a Node.js Readable stream */
+        downloadMediaStream: (
+            options?: MediaStreamOptions,
+        ) => Promise<MessageMediaStream | undefined>;
         /** Returns the Chat this message was sent in */
         getChat: () => Promise<Chat>;
         /** Returns the Contact this message was sent from */
@@ -1600,8 +1618,18 @@ declare namespace WAWebJS {
         reqOptions?: RequestInit;
     }
 
+    /** Common metadata for media attached to a message */
+    export interface MessageMediaMetadata {
+        /** MIME type of the attachment */
+        mimetype: string;
+        /** Document file name. Value can be null */
+        filename?: string | null;
+        /** Document file size in bytes. Value can be null. */
+        filesize?: number | null;
+    }
+
     /** Media attached to a message */
-    export class MessageMedia {
+    export class MessageMedia implements MessageMediaMetadata {
         /** MIME type of the attachment */
         mimetype: string;
         /** Base64-encoded data of the file */
@@ -1632,6 +1660,17 @@ declare namespace WAWebJS {
             url: string,
             options?: MediaFromURLOptions,
         ) => Promise<MessageMedia>;
+    }
+
+    /** Options for downloadMediaStream */
+    export interface MediaStreamOptions {
+        /** Size in bytes of each chunk read from the browser (default 10MB) */
+        chunkSize?: number;
+    }
+
+    /** Result of downloadMediaStream: a Readable stream with media metadata */
+    export interface MessageMediaStream extends MessageMediaMetadata {
+        stream: Readable;
     }
 
     export type MessageContent =
