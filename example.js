@@ -7,7 +7,7 @@ const { Client, Location, Poll, List, Buttons, LocalAuth } = require('./index');
  * connect to it yourself and pass the Browser (and optionally a Page).
  * The client will NOT close a browser or page you pass in.
  *
- * const puppeteer = required('puppeteer');
+ * const puppeteer = require('puppeteer');
  * const browser = await puppeteer.connect({
  *     browserURL: 'http://127.0.0.1:9222',
  *     defaultViewport: null, // keep the host window's own size

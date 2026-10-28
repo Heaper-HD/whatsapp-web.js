@@ -46,7 +46,7 @@ const { exposeFunctionIfAbsent } = require('./util/Puppeteer');
  * @param {number} options.authTimeoutMs - Timeout for authentication selector in puppeteer
  * @param {function} options.evalOnNewDoc - function to eval on new doc
  * @param {object} options.puppeteer - Puppeteer launch options. View docs here: https://github.com/puppeteer/puppeteer/
- * @param {puppeteer.Browser} [options.puppeteer.browser] - An existing puppeteer Browser to use instead of launching or connecting to one. The client will not close it on destoy() or logout(). Tip: create the connection with `defaultViewport: null` to keep the host window size.
+ * @param {puppeteer.Browser} [options.puppeteer.browser] - An existing puppeteer Browser to use instead of launching or connecting to one. The client will not close it on destoy(). Tip: create the connection with `defaultViewport: null` to keep the host window size.
  * @param {puppeteer.Page} [options.puppeteer.existingPage] - An existing page inside options.puppeteer.browser to run WhatsApp Web in. The client will not close it, and only removes its own listeners on destroy(). Requires options.puppeteer.browser.
  * @param {number} options.qrMaxRetries - How many times should the qrcode be refreshed before giving up
  * @param {number} options.takeoverOnConflict - If another whatsapp web session is detected (another browser), take over the session in the current browser
@@ -1432,7 +1432,7 @@ class Client extends EventEmitter {
         }
         if (this._interceptionEnabled) {
             await this.pupPage.setRequestInterception(false);
-            this._interceptionEnabled = null;
+            this._interceptionEnabled = false;
         }
     }
 

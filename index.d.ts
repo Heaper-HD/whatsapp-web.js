@@ -719,7 +719,7 @@ declare namespace WAWebJS {
                 browser?: puppeteer.Browser;
                 /**
                  * An existing page inside `browser` to run WhatsApp Web in.
-                 * The client will not close it. Required `browser`.
+                 * The client will not close it. Requires `browser`.
                  */
                 existingPage?: puppeteer.Page;
             };
